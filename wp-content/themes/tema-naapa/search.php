@@ -1,0 +1,330 @@
+<?php get_header(); ?>
+
+	<div class="container">
+
+		<div class="container">	
+
+			<div class="row px-0">
+				<div class="cuida-filters filter-search d-none d-md-block">
+					<p>filtrar por:</p>
+					<div class="filter-list">
+						<?php
+							
+							if($_GET['filter'] && $_GET['filter'] != ''){
+								$active = $_GET['filter'][0];
+							}
+							function retornaNome($type){
+								if($type == 'post'){
+									return 'SE LIGA!';
+								} elseif($type == 'page') {
+									return 'PÁGINA';
+								} elseif($type == 'quem-cuida') {
+									return 'PARA QUEM CUIDA';
+								} elseif($type == 'na-quebrada') {
+									return 'O QUE ROLA NA QUEBRADA';
+								}
+							}
+
+							$terms = array('post', 'page', 'quem-cuida', 'na-quebrada');
+							$current = get_home_url();
+							foreach($terms as $term):
+								if($active == $term):
+								?>        
+									<a href="<?php echo $current;?>?s=<?php echo $_GET['s']; ?>" class="filter-link filter-active type-<?php echo $term; ?>"><i class="fa fa-check" aria-hidden="true"></i> <?php echo retornaNome($term); ?></a>                       
+								
+								<?php else: ?>
+									<a href="<?php echo $current . '?s=' . $_GET['s'] . '&filter[]=' . $term;?>" class="filter-link type-<?php echo $term; ?>"><?php echo retornaNome($term); ?></a> 
+								<?php
+								endif;
+							endforeach; ?>
+
+					</div>
+				</div>
+
+				<div class="btn-filter">
+					<button type="button" class="btn btn-outline-primary btn-avanc-f btn-avanc btn-avanc-m d-block d-md-none b-0 btn-liga" data-toggle="modal" data-target="#filtroBusca">
+						<i class="fa fa-filter" aria-hidden="true"></i> Filtrar 
+						<?php if($countBusca > 0): ?>
+							<span class="badge badge-primary"><?php echo $countBusca; ?></span>
+						<?php endif; ?>
+					</button>
+					<?php if($_GET['filter'] && $_GET['filter'] != ''): ?>
+						<span class="badge badge-primary d-inline-block d-md-none"><?php echo count($_GET['filter']); ?></span>
+					<?php endif; ?>
+				</div>
+
+				<!-- Modal -->
+				<div class="modal right fade filter-liga" id="filtroBusca" tabindex="-1" role="dialog" aria-labelledby="myModalLabel2">
+					<div class="modal-dialog" role="document">
+						<div class="modal-content">
+
+							<div class="modal-header">
+								<p class="modal-title" id="myModalLabel2">Filtrar por:</p>
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>				
+							</div>
+
+							<div class="modal-body">
+
+								<form action="">
+									<fieldset class="filter-categs cuida-categs">                              
+										<?php if($_GET['s']): ?>
+											<input type="hidden" name="s" value="<?php echo $_GET['s']; ?>">
+										<?php endif; ?>
+										<?php
+											$terms = array('post', 'page', 'quem-cuida', 'na-quebrada');
+
+											if($_GET['filter'] && $_GET['filter'] != ''){
+												$active = $_GET['filter'];
+											}
+
+											$current = get_the_permalink(get_the_ID());
+											foreach($terms as $term):
+												if( in_array($term, $active) ):
+												?>        
+													<label for="<?php echo $term; ?>">
+														<input type="checkbox" name="filter[]" id="<?php echo $term; ?>" value="<?php echo $term; ?>" checked>
+														<span><i class="fa fa-check" aria-hidden="true"></i> <?php echo retornaNome($term); ?> </span>
+													</label>
+													
+												<?php else: ?>                                            
+													<label for="<?php echo $term; ?>">
+														<input type="checkbox" name="filter[]" id="<?php echo $term; ?>" value="<?php echo $term; ?>">
+														<span><i class="fa fa-check" aria-hidden="true"></i> <?php echo retornaNome($term); ?> </span>
+													</label>
+												<?php
+												endif;
+											endforeach; 
+										?>
+									</fieldset>
+
+									<button type="submit" class="btn btn-filtro">Aplicar filtros</button>
+								</form>
+								
+
+						</div><!-- modal-content -->
+					</div><!-- modal-dialog -->
+				</div><!-- modal -->
+
+			</div> 
+
+			<div class="row">
+				<div class="col-md-8">
+					<div id="ajax-posts" class="row">
+						<?php
+							
+							$paged = 1;
+							if ( get_query_var('paged') ) $paged = get_query_var('paged');
+							if ( get_query_var('page') ) $paged = get_query_var('page');
+
+							if($_GET['filter']){
+								$postType = $_GET['filter'];
+							} else {
+								$postType = array('post', 'page', 'quem-cuida', 'na-quebrada');
+							}
+							
+							$args = array(
+								'post_type' => $postType,
+								's' => $_GET['s'],
+								'paged' => $paged,
+								'orderby' => 'date',
+            					'order'   => 'DESC',
+								'posts_per_page' => 10,
+								'post__not_in' => array(7),
+							);
+							$loop = new WP_Query($args);
+
+							while ($loop->have_posts()) : $loop->the_post();
+								$type = get_post_type();
+						?>
+
+							<div class="row mx-0 cuida-list-item type-<?php echo $type; ?>">
+								<div class="col-4">
+									<?php $thumbs = get_thumb(get_the_ID(), 'cuida-news'); ?>
+									<a href="<?php echo get_the_permalink(); ?>"><img src="<?php echo $thumbs[0]; ?>" alt="<?php echo $thumbs[1]; ?>" class="img-fluid"></a>
+								</div>
+								<div class="col-8">
+									<?php										
+										if($type == 'post'){
+											$categories = get_the_terms(get_the_ID(), 'category');
+										} elseif($type == 'quem-cuida'){
+											$categories = get_the_terms(get_the_ID(), 'categoria-cuida');
+										}
+										
+										$separator = ' / ';
+										$output = '';
+									?>
+									<div class="d-flex justify-content-between cuida-infos">
+										<div class="cuida-categs liga-categs">
+											<?php
+												if($type == 'na-quebrada'){
+													$output = '';
+													$categories = '';
+													echo '<a href="' . get_the_permalink(423) . '">O QUE ROLA NA QUEBRADA</a>';
+												}
+
+												if($type == 'page'){
+													$output = '';
+													$categories = '';
+													echo "Página: " . get_the_title();
+												}
+
+												if ( ! empty( $categories ) ) {
+													foreach( $categories as $category ) {
+														$output .= '<a class="cuida-categ" href="' . esc_url( get_category_link( $category->term_id ) ) . '" alt="' . esc_attr( sprintf( __( 'View all posts in %s', 'textdomain' ), $category->name ) ) . '">' . esc_html( $category->name ) . '</a>' . $separator;
+													}
+													echo trim( $output, $separator );
+												}
+												
+											?>
+										</div>
+										<div class="cuida-date">
+											<?php echo get_the_date( 'd/m/Y \à\s H\hi' ); ?>
+										</div>
+									</div>
+
+									<?php if($type == 'page'): ?>
+										<h2><a href="<?php echo get_the_permalink(); ?>"><?php echo get_the_excerpt();?></a></h2>
+										
+									<?php else: ?>
+										<h2><a href="<?php echo get_the_permalink(); ?>"><?php the_title();?></a></h2>
+										<?php
+											$sub = get_field( "insira_o_subtitulo", get_the_ID() );
+											if($sub){
+												echo "<p>" . $sub . "</p>";
+											} else {
+												echo "<p>" . get_the_excerpt() . "</p>";
+											}
+										?>
+									<?php endif; ?>
+								</div>                    
+							</div>
+
+						<?php
+								endwhile;
+						wp_reset_postdata();
+						?>
+					</div>
+
+					<button id="more_busca">Veja mais</button>
+				</div>
+			</div>
+		</div>
+		
+		<div class="container mt-4 p-0">
+			<?php $personagens = get_field('personagens','conf-turma'); ?>
+			<div class="row">
+				<div class="col-12 p-0">
+					<div class="turma-naapa">
+						<div class="title-special d-flex align-items-center justify-content-between">
+							<h2 style="border-color: #FFC701;">A turma do NAAPA</h2>
+						</div>
+						<div class="credito">
+							<p class="mb-0 mt-2">Criação de Evandro Carlos Figueiredo</p>
+						</div>
+
+						<div class="d-none d-md-block">
+                    <div class="tab">
+
+                        <ul class="tabs row">
+                            <?php foreach($personagens as $personagen): ?>
+                                <li class="col">
+                                    <a href="#"><picture><img src="<?php echo wp_get_attachment_url( $personagen['imagem_do_personagem'] ); ?>" class="img-fluid"></picture></a>
+                                </li>
+                            <?php endforeach; ?>                        
+                        </ul>
+                        <!-- / tabs -->
+
+                        <div class="tab_content">
+                            
+                            <?php foreach($personagens as $personagen): ?>
+                                <div class="tabs_item">
+                                    <div class="row">
+                                        <div class="col-md-7">
+                                        <img src="<?php echo wp_get_attachment_url( $personagen['imagem_do_texto'] ); ?>" class="img-fluid">
+                                        </div>
+                                        <div class="col-md-4 d-flex align-items-center">
+                                            <div class="turma-text">
+                                                <div class="turma-title"><?php echo $personagen['nome_do_personagem']; ?></div>
+                                                <div class="turma-descri">
+                                                    <?php echo $personagen['descritivo_do_personagem']; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- / tabs_item -->
+                            <?php endforeach; ?>
+
+                        </div>
+                        <!-- / tab_content -->
+                    </div>
+                    <!-- / tab -->
+                </div>
+
+                <div class="d-block d-md-none">
+
+                    
+											
+                            <div class="tab">
+
+                                <ul class="tabs mobile-tabs">
+                                   
+                                    <?php foreach($personagens as $personagen): ?>                                        
+                                            <li class="">                                                        
+                                                <a href="#"><picture><img src="<?php echo wp_get_attachment_url( $personagen['imagem_do_personagem'] ); ?>" class="img-fluid"></picture></a>                                                    
+                                            </li>
+                                    <?php endforeach; ?> 
+                                                             
+                                </ul>
+                                <!-- / tabs -->
+
+                                <div class="tab_content">
+                                    
+                                    <?php foreach($personagens as $personagen): ?>
+                                        <div class="tabs_item">
+                                            <div class="row">
+                                                <div class="col-6 pr-0">
+                                                <img src="<?php echo wp_get_attachment_url( $personagen['imagem_do_texto_mobile'] ); ?>" class="img-fluid">
+                                                </div>
+                                                <div class="col-6 pl-0 d-flex align-items-center">
+                                                    <div class="turma-text">
+                                                        <div class="turma-title"><?php echo $personagen['nome_do_personagem']; ?></div>
+                                                        <div class="turma-descri">
+                                                            <?php echo $personagen['descritivo_do_personagem']; ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- / tabs_item -->
+                                    <?php endforeach; ?>
+
+                                </div>
+                                <!-- / tab_content -->
+                            </div>
+                            <!-- / tab -->
+                        
+
+                </div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		
+		<div class="container mt-4">
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="pagination-prog text-center">
+						<?php //wp_pagenavi( array( 'query' => $query ) ); ?>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+
+		<br><br>
+	</div>
+
+<?php get_footer();

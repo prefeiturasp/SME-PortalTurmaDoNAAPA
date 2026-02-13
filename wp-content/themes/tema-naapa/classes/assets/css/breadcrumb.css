@@ -1,0 +1,24 @@
+#breadcrumb{
+    list-style:none;
+    overflow:hidden;
+    margin-top: 1rem;
+    margin-bottom: 0;
+}
+
+#breadcrumb li{
+    display:inline-block;
+    vertical-align:middle;
+    margin-right:5px;
+    font-size: 16px;
+}
+
+#breadcrumb li a{
+    font-size: 16px;
+    color: #E7600C;
+}
+
+#breadcrumb .separator{
+    font-size:18px;
+    font-weight:100;
+    color:#4f4f4f;
+}

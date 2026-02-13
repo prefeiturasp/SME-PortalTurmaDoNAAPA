@@ -1,0 +1,20 @@
+version: '3.3'
+services:
+    turmadonaapa:
+        restart: always
+        env_file:
+            - ../env_turmadonaapa
+        container_name: turmadonaapa
+        ports:
+            - '8083:80'
+        volumes:
+            - '../nfs/turmadonaapa-dev/uploads:/var/www/html/wp-content/uploads'
+            - '../nfs/turmadonaapa-dev/plugins:/var/www/html/wp-content/plugins'
+            - '../nfs/turmadonaapa-dev/wflogs:/var/www/html/wp-content/wflogs'
+            - '../nfs/turmadonaapa-dev/upgrade:/var/www/html/wp-content/upgrade'
+            - '../nfs/turmadonaapa-dev/ai1wm-backups:/var/www/html/wp-content/ai1wm-backups'
+            - '../nfs/turmadonaapa-dev/locationmatch:/etc/apache2/locationmatch/location_match.modsecurity'
+        image: wordpress/turmadonaapa
+        build: 
+            dockerfile: ./Dockerfile
+            context: . 
